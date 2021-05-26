@@ -1,0 +1,590 @@
+---
+title: "Whose ideas are worth spreading? <br>The representation of women and ethnic groups in TED talks - A Small Replication using R"
+author: "Camille Landesvatter"
+date: "June 1, 2021"
+output:
+  html_document: 
+    highlight: tango
+    toc: true
+    toc_depth: 3
+    code_folding: "show"
+---
+
+## Introduction
+
+The following demonstrates an analysis with data of [TED talk transcripts](https://www.ted.com/talks).
+Originally, this research and the collected data stems from research of Carsten Schwemmer & Sebastian Jungkunz and their paper ["Whose ideas are worth spreading? The representation of women and ethnic groups in TED talks"](https://www.tandfonline.com/doi/full/10.1080/2474736X.2019.1646102) (Political Research Exchange **2019** (1), 1-23).
+
+
+If you are interested in the following analyses, definitely go and read their [original paper](https://www.tandfonline.com/doi/full/10.1080/2474736X.2019.1646102). In short, they answered the question of how women and different ethnic groups are representated in TED talks. The data they gathered contains transcripts of over 2333 TED talks. Further, via a facial recognition API they were able to extract key characteristics of speakers, such as gender and ethnicity. Finally, by using the Youtube Data API they also extracted YT metadata, such as likes, comments and views.
+
+
+With this immense data they were able to perform multiple analyses. In the following I will solely focus and mimic their part on topic models. Here, they fitted a [structural topic model](https://cran.r-project.org/web/packages/stm/vignettes/stmVignette.pdf) to **a)** examine how many and which topics are discussed in TED talks and **b)** how gender and ethnicity influence the topic prevalence (*e.g., are women more likely to talk about technical topics than men?*).
+
+Extensive replication files with R code, plots and data are made available via the [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/EUDWP3).
+
+*Other resources*:
+
+Apart from benefiting from their excellent replication files which everyone can easily access, there are other resources, who have used the TED data to demonstrate topic models. See e.g., this [script](https://bookdown.org/joone/ComputationalMethods/topicmodeling.html#topic-modeling-mit-stm) for a complete workflow in german language.
+
+For further ideas, especially with regards to visualization and smart data pre-processing of textual data have a look at [Julia Silges](https://juliasilge.com/) work. Together with [David Robinson](http://varianceexplained.org/) she also published excellent guidelines on the [tidytext R package](https://www.tidytextmining.com/). Here are two blog posts on the specific task of Structural Topic Modely by Julia Silge:
+
+- https://juliasilge.com/blog/sherlock-holmes-stm/
+- https://juliasilge.com/blog/evaluating-stm/
+
+
+## Setup
+
+```{r, include = FALSE}
+knitr::opts_knit$set(root.dir = 'C:/Users/camil/Desktop/ted-talks-STM') #set working directory
+```
+
+### Load packages
+
+We start by loading all necessary R packages. Make sure, you have installed them (install.packages()) prior to loading them.
+
+```{r message=FALSE, warning=FALSE}
+set.seed(1337)
+library(quanteda)
+library(stm)
+library(lubridate)
+library(cowplot)
+library(stminsights)
+library(ggplot2)
+library(ggrepel)
+library(ggeffects)
+library(cowplot)
+library(sjPlot)
+library(stargazer)
+library(tidyverse)
+library(tidytext)
+library(graphics)
+library(ggthemes)
+library(scales)
+
+theme_set(theme_light()) #set global theme
+options(scipen=999) #force R not to use exponential notation (e.g. e+10)
+```
+
+### Data Import
+
+Data is made available on the [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/EUDWP3). Besides basic operations (e.g, removing talks without human speakers), I also take a subset which contains the following information:
+
+- ``title``: title of the TED talk
+- ``date``: month and year of the TED talk
+- ``text``: transcript of the TED talk
+- ``dummy_female``: a dummy variable for speaker gender (female vs male)
+- ``dummy_female``: a dummy variable for speaker ethnicity (white vs non-white)
+
+```{r message=FALSE, warning=FALSE}
+df <- read_tsv('C:/Users/camil/Desktop/CSS Session/ted_main_dataset.tsv')
+
+df <- df %>% 
+  filter(!is.na(speaker_image_nr_faces)) %>% # remove talks without human speakers
+  arrange(date) #order by date
+
+df$year <- str_sub(df$date, 1, 4) #extract year
+df$date_num <- factor(df$date) %>% as.numeric() # turn date variable from character to numeric
+
+df <- df %>% 
+  mutate(id = 1:n()) %>% #add numeric ID for each talk
+  select(id, date_num, year, title, text, dummy_female, dummy_white) #select relevant variables
+
+head(df, 5)
+```
+
+# Substantive Representation within TED Talks
+
+In the following, I will replicate a topic model, namely a structural topic model, which the authors fitted in order to **a)** examine how many and which topics are discussed in TED talks and **b)** how gender and ethnicity of a speaker influences the topic prevalende (*e.g., are women more likely to talk about technical topics than men?*).
+
+## Data Pre-processing
+
+Before we can fit such a structural topic model (and any topic model or text-analytical analyses at all) we have to invest some time in data pre-processing. 
+
+### Step 1: Create a corpus
+
+```{r message=FALSE, warning=FALSE}
+# with quanteda
+ted_corpus <- corpus(df$text)
+ted_corpus
+```
+
+### Step 2: Clean Corpus and cast data into a DFM/DTM
+
+```{r message=FALSE, warning=FALSE}
+# with quanteda (combines cleaning and casting in one step)
+ted_dfm <- dfm(ted_corpus,
+            stem = TRUE,
+            tolower = TRUE,
+            remove_twitter = FALSE,
+            remove_punct = TRUE,
+            remove_url = FALSE,
+            remove_numbers =TRUE,
+            verbose = TRUE,
+            remove = stopwords('english'))
+ted_dfm #check that stemming etc worked
+dim(ted_dfm)
+```
+
+The document-feature Matrix we just constructed contains 2333 documents with 44704 features (i.e., terms). Because of the extremely large number of features we can engage in feature trimming to reduce the size of the DFM.
+Ideally, we exclude features that occur way too often or too few times to be meaningful interpreted. When you decide to trim, be careful and compare different parameters, since this step might strongly influence the results of your topic model.
+Here, we closely follow the original paper and exclude all terms that appear in more than half or in less than 1% of all talks.
+
+```{r message=FALSE, warning=FALSE}
+ted_dfm <- dfm_trim(ted_dfm, max_docfreq = 0.50,min_docfreq = 0.01,
+                    docfreq_type = 'prop')
+
+dim(ted_dfm) # 2333 documents with 4805 features (previous: 44727)
+```
+
+## Analysis
+### (Structural) Topic Model
+
+We have prepared our textual data. Before we can fit the actual STM we have to consider that each topic model implementation in R (e.g., latent dirichelt, biterm, structural topic models) needs a different input format. The stm-package which I will use in the following needs a different format than the Quanteda one we just designed $\rightarrow$ use the convert function (qunateda) to construct such an object.
+
+```{r message=FALSE, warning=FALSE}
+out <- convert(ted_dfm, to = "stm", docvars=df)
+
+str(out, max.level = 1)
+```
+
+Now, using this object containing all 2333 documents and their respective vocabulary we can perform our first topic model.
+
+The following chunk will take several minutes to evaluate (for me 5-10 minutes). If you want to run it yourself, set eval to TRUE in the next code chunk (for now it is set to FALSE).
+
+```{r, eval = FALSE}
+# running model with 20 topics with covariates
+stm_20 <- stm(
+  documents=out$documents,
+  vocab=out$vocab,
+  data = out$meta,
+  prevalence =  ~ s(date_num, degree = 2) + dummy_female * dummy_white,
+  init.type = 'Spectral', #default
+  K = 20,
+  verbose = FALSE
+)
+
+#save.image('C:/Users/camil/Desktop/CSS Session/ted_first_model.RData')
+```
+
+Since I already ran it once, I am simply going to load the result object I saved back then.
+Now, we can also for the first time plot results of our topic model.
+
+```{r message=FALSE, warning=FALSE}
+load("C:/Users/camil/Desktop/CSS Session/ted_first_model.RData")
+
+# plot topics with most frequent words within topics
+plot(stm_20)
+
+# By using summary() you receive top words for all 20 topics
+summary(stm_20)
+```
+
+
+One of the main advantages of STM as compared to other topic model implementations (e.g., LDA) is that we can include covariates to evaluate the influence they have on topic prevalence (*e.g., are women more likely to talk about technical topics than men?*).
+
+In the "Appendix" of this document you can also see a visualization of the regression results, since the output here consists of 20 single tables, which no longer are easy to overview (check summary()).
+
+```{r message=FALSE, warning=FALSE}
+# fit regression
+effect_stm_20 <- estimateEffect(1:20 ~ s(date_num, degree = 2) +
+                                  dummy_female * dummy_white,
+                 stm_20,
+                 metadata = out$meta)
+
+#summary() gives you regression coefficients for all 20 topics
+#summary(effect_stm_20)
+```
+
+## The optimal number of k 
+
+This far, we simply decided to set k (= the number of topics) to 20, i.e. we expect our selection of TED talks to cover 20 topics. This was pure guessing. There are many different ways of how to specify k (informed guessing via theory and previous research, rule of thumbs+, manual labeling of a subset, **statistical measures**).
+
++ +the [documentation of {stm}](https://cran.r-project.org/web/packages/stm/stm.pdf) suggests: "For short corpora focused on very specific
+subject matter (such as survey experiments) 3-10 topics is a useful starting range. For small corpora (a few hundred to a few thousand) 5-50 topics is a good place to start. Beyond these rough guidelines it is application specific. Previous applications in political science with medium sized corpora (10k to 100k documents) have found 60-100 topics to work well. For larger corpora 100 topics is a useful default size." 
+
+In the following, we will focus on statistical measures, which is a comparatively fast and reasonable way of validating your **k**. To do so:
+
+1. perform multiple topic models with multiple specifications of k
+2. compare those on basis of statistical measures
+3. choose one specification of k
+4. finally visualizise and manual interpretate your topic model of choice
+
+```{r, eval = FALSE}
+# specify models with different k
+stm_20_30_40_50 <- tibble(K = c(20, 30, 40, 50)) %>% 
+  mutate(model = map(K, ~ stm(out$documents, 
+                              out$vocab,
+                              data=out$meta,
+                              prevalence =  ~ s(date_num, degree = 2) +
+                                dummy_female * dummy_white,
+                              K = .,
+                              verbose = FALSE)))
+stm_20_30_40_50
+
+#took about 20 min on my PC
+#save.image('C:/Users/camil/Desktop/CSS Session/ted_all_topic_models.RData')
+```
+
+
+```{r message=FALSE, warning=FALSE}
+#alternatively load data
+load("C:/Users/camil/Desktop/CSS Session/ted_all_topic_models.RData")
+
+#extract objects for single k values to perform regression and other analysis
+stm20<-stm_20_30_40_50[[1,2]]
+stm30<-stm_20_30_40_50[[2,2]]
+stm40<-stm_20_30_40_50[[3,2]]
+stm50<-stm_20_30_40_50[[4,2]]
+stm50
+```
+
+### Validation and Evaluation based on statistical measures
+
+I will use [semantic coherence](https://dl.acm.org/doi/10.5555/2145432.2145462) and exclusivity scores to evaluate the different specifications of k.
+
+However, a variety of other (statistical) evaluations are possible, see for instance [here](https://juliasilge.com/blog/evaluating-stm/).
+
+- **Semantic coherence**: how often do terms that have a high probability to belong to one topic, also co-occur in the respective document
+- topics with high semantic coherence are very human "readable/"interpretable"
+- in R: semanticCoherence(), e.g., #semanticCoherence(stm20[[1]], out$documents)
+
+- However, do not only consider semantic coherence (can easily be improved by simply modeling fewer topels) but also consider exclusivity
+- **Exclusivity**: How exclusive are the terms that occur with high probability for a topic; put differently: are they for other topics very unlikely?
+- in R: exclusivity(), e.g., #exclusivity(stm20[[1]], out$documents)
+
+In my opinion most insights are generated by plotting the two measures against each other:
+
+**Interpretation?** Put shortly, the higher the semantic coherence and the higher the exclusivity of words within a topic, the "better" a topic model.
+
+```{r message=FALSE, warning=FALSE}
+# calculate exclusivity + semantic coherence
+model_scores <- stm_20_30_40_50 %>% 
+  mutate(exclusivity = map(model, exclusivity),
+         semantic_coherence = map(model, semanticCoherence, out$documents)) %>% 
+  select(K, exclusivity, semantic_coherence)
+
+model_scores #results in nested dataframes containing the quantities of interest
+
+# plot
+model_scores %>%
+  select(K, exclusivity, semantic_coherence) %>%
+  filter(K %in% c(20, 30, 50)) %>%
+  unnest() %>%
+  mutate(K = as.factor(K)) %>%
+  ggplot(aes(semantic_coherence, exclusivity, color = K)) +
+  geom_point(size = 2, alpha = 0.7) +
+  labs(x = "Semantic coherence",
+       y = "Exclusivity",
+       title = "Comparing exclusivity and semantic coherence")
+
+# upper right area shows "good" topic model specifications
+
+# plot means for better overview
+model_scores %>% 
+  unnest(c(exclusivity, semantic_coherence)) %>% 
+  group_by(K) %>% 
+  summarize(exclusivity = mean(exclusivity),
+            semantic_coherence = mean(semantic_coherence)) %>% 
+  ggplot(aes(x = semantic_coherence, y = exclusivity, color = as.factor(K))) +
+  geom_point() +
+  theme_bw()
+```
+
+**Original (better?) visualization from the paper:**
+
+```{r message=FALSE, warning=FALSE}
+# getting semantic coherence and exclusivity scores
+quality <-
+  get_diag(
+    models = list(
+      model_20 = stm20[[1]],
+      model_30 = stm30[[1]],
+      model_50 = stm50[[1]]
+    ),
+    outobj = out
+  )
+
+# plotting scores (figure S2)
+quality %>%
+  mutate(nr_topics = as.factor(nr_topics)) %>%
+  ggplot(aes(
+    x = coherence,
+    y = exclusivity,
+    color = statistic,
+    shape = nr_topics
+  ))  +
+  geom_text_repel(aes(label = nr_topics),
+                  size = 4.5,
+                  show.legend = FALSE) + geom_point() +
+  labs(
+    x = 'Semantic Coherence',
+    y = 'Exclusivity',
+    shape = 'No. of topics',
+    color = 'Statistic'
+  ) + theme_light() +
+  theme(
+    legend.position = c(0.9, 0.7),
+    legend.background = element_rect(color = "grey50")
+  ) +
+  scale_color_brewer(palette = 'Set1')
+```
+
+### TED Talks contain 30 topics!
+
+## Visualizations
+
+After inspecting the different topic models, we found that the model with 30 topics includes the most useful topics for our analysis. We store objects for this model in a separate file.
+
+```{r, eval = FALSE}
+save(out, ted_dfm, stm30, file = "C:/Users/camil/Desktop/CSS Session/ted_final_topic_model.RData")
+save.image()
+unlink("C:/Users/camil/Desktop/CSS Session/ted_final_topic_model.RData")
+```
+
+Now let’s see what this topic model tells us about the Ted Talk Corpus and our research questions.
+
+```{r, include=FALSE}
+# reload data for analysis
+df <- read_tsv('C:/Users/camil/Desktop/CSS Session/ted_main_dataset.tsv')
+df <- df %>% filter(!is.na(speaker_image_nr_faces)) 
+
+# load topic models
+load("C:/Users/camil/Desktop/CSS Session/ted_final_topic_model.RData")
+```
+
+### Highest word probabilities for each topic
+
+In order to gain valuable insights into the topics found and to be able to make nice visualizations, I would recommend using ggplot2. 
+
+To do so, first, we have to transform our stm-object to a ggplot2- and tidyverse compatible format using the {tidytext}-package.
+
+```{r message=FALSE, warning=FALSE}
+td_beta <- tidy(stm30[[1]]) 
+td_beta
+```
+
+One good idea is to plot the most likely words per topic. For this we have to extract the beta values from out topic model (beta is the probability of words belonging to topics) and perform some ggplot coding.
+
+```{r message=FALSE, warning=FALSE}
+td_beta %>%
+    group_by(topic) %>%
+    top_n(10, beta) %>%
+    ungroup() %>%
+    mutate(topic = paste0("Topic ", topic),
+           term = reorder_within(term, beta, topic)) %>%
+    ggplot(aes(term, beta, fill = as.factor(topic))) +
+    geom_col(alpha = 0.8, show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free_y") +
+    coord_flip() +
+    scale_x_reordered() +
+    labs(x = NULL, y = expression(beta),
+         title = "Highest word probabilities for each topic",
+         subtitle = "Different words are associated with different topics")
+```
+
+Unfortunately, with this high number of topics (remember, k is set to 30 here), the small multiples get quite small. Maybe consider to use a shiny app to explore all your topics. For an demonstration see [here](https://juliasilge.shinyapps.io/sherlock-holmes/#section-words-by-topic).
+
+### One final plot 
+
+... originally from [Julia Silge](#https://juliasilge.com/blog/evaluating-stm/)
+
+```{r message=FALSE, warning=FALSE}
+td_gamma <- tidy(stm30[[1]], matrix = "gamma",
+                 document_names = rownames(ted_dfm))
+
+#td_gamma
+
+top_terms <- td_beta %>%
+  arrange(beta) %>%
+  group_by(topic) %>%
+  top_n(7, beta) %>%
+  arrange(-beta) %>%
+  select(topic, term) %>%
+  summarise(terms = list(term)) %>%
+  mutate(terms = map(terms, paste, collapse = ", ")) %>% 
+  unnest()
+
+gamma_terms <- td_gamma %>%
+  group_by(topic) %>%
+  summarise(gamma = mean(gamma)) %>%
+  arrange(desc(gamma)) %>%
+  left_join(top_terms, by = "topic") %>%
+  mutate(topic = paste0("Topic ", topic),
+         topic = reorder(topic, gamma))
+
+gamma_terms %>%
+  top_n(20, gamma) %>%
+  ggplot(aes(topic, gamma, label = terms, fill = topic)) +
+  geom_col(show.legend = FALSE) +
+  geom_text(hjust = 0, nudge_y = 0.0005, size = 3,
+            family = "IBMPlexSans") +
+  coord_flip() +
+  scale_y_continuous(expand = c(0,0),
+                     limits = c(0, 0.09),
+                     labels = percent_format()) +
+  theme_tufte(base_family = "IBMPlexSans", ticks = FALSE) +
+  theme(plot.title = element_text(size = 16,
+                                  family="IBMPlexSans-Bold"),
+        plot.subtitle = element_text(size = 13)) +
+  labs(x = NULL, y = expression(gamma),
+       title = "Top 20 topics by prevalence in the Hacker News corpus",
+       subtitle = "With the top words that contribute to each topic")
+
+#compare: https://bookdown.org/joone/ComputationalMethods/topicmodeling.html#topic-modeling-mit-stm
+
+```
+
+... and the same information in tabular format:
+
+```{r message=FALSE, warning=FALSE}
+# tabular format
+gamma_terms %>%
+  select(topic, gamma, terms) %>%
+  knitr::kable(digits = 3, 
+        col.names = c("Topic", "Expected topic proportion", "Top 7 terms"))
+```
+
+## "Appendix"
+
+As I mentioned, the huge advantage of STM above other topic model implementations in R is that we can include covariates to examine influences of those on topic prevelance. Such research questions are extremely interesting for description as well as explanation within social scientific research questions.
+
+The above code fitted regressions (e.g., gender and ethnicity on a topic model with k=20), where one possible finding could be that women are more likely to generate a document fitting to topic 1 rather than topic 20.
+
+The following visualizes such findings, since these overall regression coefficient tables can easily be too much to be overviewed.
+
+### Topic prevalence effects (Figure S3)
+
+```{r fig.height=8, fig.width=8, message=FALSE, warning=FALSE}
+# create several variables for analysis
+df <- df %>% arrange(date)
+df$date_num <- factor(df$date) %>% as.numeric()
+df$year <-str_sub(df$date, 1, 4)
+df$yt_date_num <- df$yt_date %>% str_sub(1, 4) %>% as.integer()
+df$factor_female <- as.factor(df$dummy_female)
+df$factor_white <- as.factor(df$dummy_white)
+levels(df$factor_female) <- c('male', 'female')
+levels(df$factor_white)[levels(df$factor_white)== 1] <- 'white'
+levels(df$factor_white)[levels(df$factor_white)== 0] <- 'non-white'
+df$factor_white <- factor(df$factor_white, levels = c('white', 'non-white'))
+
+pal <- c('#377eb8', '#e41a1c', '#4daf4a')
+
+get_date <- function(x, startdate = "2006-06-01") {
+  startdate <- ymd(startdate)
+  x <- round(x, 0)
+  return(startdate + months(x - 1))
+}
+
+#fit regression
+effect_stm_30 <-
+  estimateEffect(1:30 ~ s(date_num, degree = 2) + dummy_female + dummy_white, stm30[[1]], metadata = out$meta)
+
+effects_white <- get_effects(estimates = effect_stm_30,
+                             variable = 'dummy_white',
+                             type = 'pointestimate') %>%
+  mutate(value = if_else(value == 0, 'Other', 'White')  %>% as.factor())
+
+
+effects_female <- get_effects(estimates = effect_stm_30,
+                              variable = 'dummy_female',
+                              type = 'pointestimate') %>%
+  mutate(value = if_else(value == 0, 'Male', 'Female')  %>% as.factor())
+
+effects_time <- get_effects(estimates = effect_stm_30,
+                            variable = 'date_num',
+                            type = 'continuous') %>%
+  mutate(date = get_date(value))
+
+
+
+plot_female <- effects_female %>% filter(topic == 4)  %>%
+  ggplot(aes(y = value, x = proportion, group = 1)) +
+  geom_point(color = '#778899', size = 1.5) +
+  geom_line(color = '#778899', size = 0.5) + guides(fill = F,
+                                                    color = F,
+                                                    group = F)  +
+  geom_errorbarh(
+    aes(xmin = lower, xmax = upper),
+    height = 0.08,
+    color = '#778899',
+    size = 0.5
+  ) + coord_flip()  +
+  theme(
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank()
+  )   +
+  scale_x_continuous(labels = percent,
+                     breaks = c(-0.01, 0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06)) +
+  labs(x = 'Topic proportion: inequality', y = 'Gender') #+
+
+
+plot_white <- effects_white %>% filter(topic == 4)  %>%
+  ggplot(aes(y = value, x = proportion, group = 1)) +
+  geom_point(color = '#778899', size = 1.5) +
+  geom_line(color = '#778899', size = 0.5) + guides(fill = F,
+                                                    color = F,
+                                                    group = F)  +
+  geom_errorbarh(
+    aes(xmin = lower, xmax = upper),
+    height = 0.08,
+    color = '#778899',
+    size = 0.5
+  ) + coord_flip()  +
+  theme(
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank(),
+    panel.grid.major.x = element_blank()
+  )   +
+  scale_x_continuous(labels = percent,
+                     breaks = c(-0.01, 0.00, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06)) +
+  labs(x = 'Topic proportion: inequality', y = 'Ethnicity') 
+
+break.vec <-
+  c(seq(
+    from = as.Date("2006-06-01"),
+    to = as.Date("2017-05-01"),
+    by = "6 months"
+  ),
+  as.Date("2017-04-01"))
+
+plot_time <- effects_time %>% filter(topic == 4)  %>%
+  ggplot(aes(x = date, y = proportion)) +
+  geom_line(color = '#778899') +
+  geom_ribbon(aes(ymin = lower, ymax = upper),
+              alpha = 0.2,
+              fill = '#778899') +
+  scale_x_date(
+    breaks = break.vec,
+    minor_break = break.vec,
+    date_labels = "%Y/%m",
+    expand = c(0.01, 0.0)
+  ) +
+  scale_y_continuous(breaks = pretty_breaks(n = 8),
+                     expand = c(0.00, 0),
+                     labels = percent) +
+  guides(fill = F,
+         color = F,
+         group = F)  +
+  labs(x = 'Date' , y  = 'Topic proportion: inequality') +
+  scale_color_manual(values = pal) +
+  scale_fill_manual(values = pal) +
+  theme(
+    axis.text.x = element_text(angle = 90, hjust = 1),
+    panel.grid.minor.x = element_blank(),
+    panel.grid.minor.y = element_blank()
+  )
+
+
+
+g1 <- cowplot::plot_grid(plot_white,
+                         plot_female,
+                         ncol = 2,
+                         labels = c('A', 'B'))
+
+g2 <- cowplot::plot_grid(g1, plot_time, ncol = 1,
+                         labels = c('', 'C'))
+g2
+```
+
