@@ -51,7 +51,7 @@ Camille Landesvatter
 ---
 # Text as Data
 
-&lt;img src="wordcloud_2.png" width="30%" /&gt;&lt;img src="wordcloud_1.png" width="30%" /&gt;&lt;img src="wordcloud_3.png" width="30%" /&gt;
+&lt;img src="wordcloud_2.PNG" width="30%" /&gt;&lt;img src="wordcloud_1.PNG" width="30%" /&gt;&lt;img src="wordcloud_3.PNG" width="30%" /&gt;
 
 &lt;font size="3"&gt; &lt;br&gt;Sources from left to right: [Santos, Paulos &amp; Guerreiro 2018](https://www.emerald.com/insight/content/doi/10.1108/IJEM-01-2017-0027/full/pdf?casa_token=4vYq-zNmJFkAAAAA:ncpw7fsdg97gbyLTPGxZVQSJ_GpdaLcyaWNo_r4DaNFRvijwBW5NRPpyV8u2SiNpBQRru04jVUhyO3imrfEK5kMtOM4nS5A4WtuGbBvr1-v1-Mrfxk48RQ);
 [Mostafa, M. 2018](https://journals.sagepub.com/doi/pdf/10.1177/1470785318771451);
@@ -60,7 +60,7 @@ Camille Landesvatter
 ---
 # Text as Data
 
-&lt;img src="sentiment_1.png" width="50%" /&gt;&lt;img src="topics_1.png" width="50%" /&gt;
+&lt;img src="sentiment_1.PNG" width="50%" /&gt;&lt;img src="topics_1.PNG" width="50%" /&gt;
 
 &lt;font size="3"&gt; &lt;br&gt;Source: [Mostafa, M. 2018](https://journals.sagepub.com/doi/pdf/10.1177/1470785318771451)&lt;/font size&gt; 
 
@@ -264,7 +264,7 @@ corpus
 ## Content:  documents: 20
 ```
 
-&lt;img src="corpus_1_tm.png" width="70%" style="display: block; margin: auto;" /&gt;
+&lt;img src="corpus_1_tm.PNG" width="70%" style="display: block; margin: auto;" /&gt;
 ---
 
 # 2. Data manipulation: tm Example
@@ -281,7 +281,7 @@ corpus_clean &lt;- corpus %&gt;%
   tm_map(stemDocument)
 ```
 
-&lt;img src="corpus_2_tm.png" width="70%" style="display: block; margin: auto;" /&gt;
+&lt;img src="corpus_2_tm.PNG" width="70%" style="display: block; margin: auto;" /&gt;
 
 ---
 # 2. Data manipulation: quanteda Example
@@ -298,7 +298,7 @@ library(quanteda)
 corpus &lt;- corpus(df$text)
 ```
 
-&lt;img src="corpus_1_quanteda.png" width="50%" style="display: block; margin: auto;" /&gt;
+&lt;img src="corpus_1_quanteda.PNG" width="50%" style="display: block; margin: auto;" /&gt;
 
 ---
 # 2. Data manipulation: quanteda Example
@@ -316,7 +316,7 @@ dfm &lt;- dfm(corpus,
             remove = stopwords('english'))
 ```
 
-&lt;img src="corpus_2_quanteda.png" width="70%" style="display: block; margin: auto;" /&gt;
+&lt;img src="corpus_2_quanteda.PNG" width="70%" style="display: block; margin: auto;" /&gt;
 ---
 # 2. Data manipulation: Summary
 
@@ -347,7 +347,7 @@ td-idf: how often a word appears in a local context (such as a document) with ho
 Remember our tidy-format text data? (one-token-per-row)
 
 .pull-left[
-&lt;img src="tidytext_1.png" width="30%" style="display: block; margin: auto;" /&gt;
+&lt;img src="tidytext_1.PNG" width="30%" style="display: block; margin: auto;" /&gt;
 ]
 
 .pull-right[
@@ -368,7 +368,7 @@ dim(dtm)
 ```
 ]
 
-&lt;img src="tidytext_2.png" width="50%" style="display: block; margin: auto 0 auto auto;" /&gt;
+&lt;img src="tidytext_2.PNG" width="50%" style="display: block; margin: auto 0 auto auto;" /&gt;
 ---
 # 3. Vectorization: tm example
 
@@ -431,7 +431,7 @@ dfm &lt;- dfm(corpus,
 ---
 # 4. Analysis: Unsupervised text classification
 
-&lt;img src="grimmer_stewart.png" width="50%" style="display: block; margin: auto;" /&gt;
+&lt;img src="grimmer_stewart.PNG" width="50%" style="display: block; margin: auto;" /&gt;
 
 &lt;font size="3"&gt; &lt;br&gt;Source: [Grimmer &amp; Stewart 2013](https://www.cambridge.org/core/journals/political-analysis/article/text-as-data-the-promise-and-pitfalls-of-automatic-content-analysis-methods-for-political-texts/F7AAC8B2909441603FEB25C156448F20)&lt;/font size&gt; 
 ---
@@ -459,7 +459,7 @@ Aim:
 
 ---
 
-&lt;img src="topic-models-Blei.png" width="40%" style="display: block; margin: auto;" /&gt;
+&lt;img src="topic-models-Blei.PNG" width="40%" style="display: block; margin: auto;" /&gt;
 
 &lt;font size="4"&gt; &lt;br&gt;Source: [Blei, Ng, Jordan (2003)](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)&lt;/font size&gt; 
 ---

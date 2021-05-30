@@ -93,9 +93,9 @@ BibOptions(
 # Text as Data
 
 ```{r, fig.show="hold", out.width = "30%", fig.cap=''}
-knitr::include_graphics("wordcloud_2.png")
-knitr::include_graphics("wordcloud_1.png")
-knitr::include_graphics("wordcloud_3.png")
+knitr::include_graphics("wordcloud_2.PNG")
+knitr::include_graphics("wordcloud_1.PNG")
+knitr::include_graphics("wordcloud_3.PNG")
 ```
 
 <font size="3"> <br>Sources from left to right: [Santos, Paulos & Guerreiro 2018](https://www.emerald.com/insight/content/doi/10.1108/IJEM-01-2017-0027/full/pdf?casa_token=4vYq-zNmJFkAAAAA:ncpw7fsdg97gbyLTPGxZVQSJ_GpdaLcyaWNo_r4DaNFRvijwBW5NRPpyV8u2SiNpBQRru04jVUhyO3imrfEK5kMtOM4nS5A4WtuGbBvr1-v1-Mrfxk48RQ);
@@ -106,8 +106,8 @@ knitr::include_graphics("wordcloud_3.png")
 # Text as Data
 
 ```{r, fig.show="hold", out.width = "50%", fig.cap=''}
-knitr::include_graphics("sentiment_1.png")
-knitr::include_graphics("topics_1.png")
+knitr::include_graphics("sentiment_1.PNG")
+knitr::include_graphics("topics_1.PNG")
 ```
 
 <font size="3"> <br>Source: [Mostafa, M. 2018](https://journals.sagepub.com/doi/pdf/10.1177/1470785318771451)</font size> 
@@ -297,7 +297,7 @@ corpus
 ```
 
 ```{r, out.width = "70%", fig.align='center', fig.cap=''}
-knitr::include_graphics("corpus_1_tm.png")
+knitr::include_graphics("corpus_1_tm.PNG")
 ```
 ---
 
@@ -315,7 +315,7 @@ corpus_clean <- corpus %>%
 ```
 
 ```{r, out.width = "70%", fig.align='center', fig.cap=''}
-knitr::include_graphics("corpus_2_tm.png")
+knitr::include_graphics("corpus_2_tm.PNG")
 ```
 
 ---
@@ -333,7 +333,7 @@ corpus <- corpus(df$text)
 ```
 
 ```{r, out.width = "50%", fig.align='center', fig.cap=''}
-knitr::include_graphics("corpus_1_quanteda.png")
+knitr::include_graphics("corpus_1_quanteda.PNG")
 ```
 
 ---
@@ -352,7 +352,7 @@ dfm <- dfm(corpus,
 ```
 
 ```{r, out.width = "70%", fig.align='center', fig.cap=''}
-knitr::include_graphics("corpus_2_quanteda.png")
+knitr::include_graphics("corpus_2_quanteda.PNG")
 ```
 ---
 # 2. Data manipulation: Summary
@@ -385,7 +385,7 @@ Remember our tidy-format text data? (one-token-per-row)
 
 .pull-left[
 ```{r, out.width = "30%", fig.align="center", fig.cap=''}
-knitr::include_graphics("tidytext_1.png")
+knitr::include_graphics("tidytext_1.PNG")
 ```
 ]
 
@@ -403,7 +403,7 @@ dim(dtm)
 ]
 
 ```{r, out.width = "50%", fig.align='right', fig.cap=''}
-knitr::include_graphics("tidytext_2.png")
+knitr::include_graphics("tidytext_2.PNG")
 ```
 ---
 # 3. Vectorization: tm example
@@ -452,7 +452,7 @@ dfm <- dfm(corpus,
 # 4. Analysis: Unsupervised text classification
 
 ```{r, out.width = "50%", fig.align='center', fig.cap=''}
-knitr::include_graphics("grimmer_stewart.png")
+knitr::include_graphics("grimmer_stewart.PNG")
 ```
 
 <font size="3"> <br>Source: [Grimmer & Stewart 2013](https://www.cambridge.org/core/journals/political-analysis/article/text-as-data-the-promise-and-pitfalls-of-automatic-content-analysis-methods-for-political-texts/F7AAC8B2909441603FEB25C156448F20)</font size> 
@@ -482,7 +482,7 @@ Aim:
 ---
 
 ```{r, out.width = "40%", fig.align='center', fig.cap=''}
-knitr::include_graphics("topic-models-Blei.png")
+knitr::include_graphics("topic-models-Blei.PNG")
 ```
 
 <font size="4"> <br>Source: [Blei, Ng, Jordan (2003)](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)</font size> 
