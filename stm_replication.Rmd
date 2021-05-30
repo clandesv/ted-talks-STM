@@ -66,6 +66,18 @@ theme_set(theme_light()) #set global theme
 options(scipen=999) #force R not to use exponential notation (e.g. e+10)
 ```
 
+```{r}
+if(!require("quanteda")) {install.packages("quanteda"); library("quanteda")}
+if(!require("tidyverse")) {install.packages("tidyverse"); library("tidyverse")}
+if(!require("topicmodels")) {install.packages("topicmodels"); library("topicmodels")}
+if(!require("ldatuning")) {install.packages("ldatuning"); library("ldatuning")}
+if(!require("stm")) {install.packages("stm"); library("stm")}
+if(!require("wordcloud")) {install.packages("wordcloud"); library("wordcloud")}
+if(!require("urltools")) {install.packages("urltools"); library("urltools")}
+theme_set(theme_bw())
+```
+
+
 ### Data Import
 
 Data is made available on the [Harvard Dataverse](https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/EUDWP3). Besides basic operations (e.g, removing talks without human speakers), I also take a subset which contains the following information:
@@ -129,6 +141,8 @@ dim(ted_dfm)
 The document-feature Matrix we just constructed contains 2333 documents with 44704 features (i.e., terms). Because of the extremely large number of features we can engage in feature trimming to reduce the size of the DFM.
 Ideally, we exclude features that occur way too often or too few times to be meaningful interpreted. When you decide to trim, be careful and compare different parameters, since this step might strongly influence the results of your topic model.
 Here, we closely follow the original paper and exclude all terms that appear in more than half or in less than 1% of all talks.
+
+Der Befehl dfm_trim erlaubt durchaus komplexere Parameter wie die Begriffshäufigkeit relativ zur Termfrequenz oder Dokumentfrequenz insgesamt, aber an dieser Stelle reicht uns diese einfache Filterung.+ do not trim for small corpus
 
 ```{r message=FALSE, warning=FALSE}
 ted_dfm <- dfm_trim(ted_dfm, max_docfreq = 0.50,min_docfreq = 0.01,

@@ -1,0 +1,551 @@
+---
+title: "Machine Learning"
+subtitle: "Text classification"
+author:  
+  <table class="authors">
+    <tbody>
+      <tr>
+        <td>Camille Landesvatter</td>
+      </tr>
+      <tr>
+        <td>.font75[Mannheim Centre for European Research (MZES), University of Mannheim]</td>
+      </tr>
+    </tbody>
+  </table>
+  <table class="contact">
+  </table>
+  
+date: 
+  Compuational Social Science, Mannheim, 01.06.2021
+  
+output: 
+  xaringan::moon_reader:
+    includes:
+      after_body: insert-logo.html
+    css:
+      - default
+      - mtheme2.css
+      - fonts_mtheme.css
+    nature: 
+      beforeInit: "macros.js"
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: true
+      ratio: '16:9'
+      slideNumberFormat: "Slide %current%"
+    class: inverse, mline, center, middle
+
+---
+
+```{r setup, include=FALSE}
+## Save package names as a vector of strings
+pkgs <-
+  c("rmarkdown",
+    "knitr",
+    "dplyr",
+    "devtools",
+    "widgetframe",
+    "RefManageR",
+    "bibtex",
+    "plotly",
+    "xaringan")
+
+## Install uninstalled packages
+lapply(pkgs[!(pkgs %in% installed.packages())], install.packages)
+
+## Load all packages to library and adjust options
+lapply(pkgs, library, character.only = TRUE)
+
+## Devtools install
+#if (!("icon" %in% installed.packages()))
+ # devtools::install_github("ropenscilabs/icon")
+#library(icon)
+
+## Global chunk options
+knitr::opts_chunk$set(echo = FALSE,
+                      warning = FALSE,
+                      message = FALSE)
+options(scipen=999)
+options(htmltools.dir.version = FALSE)
+
+## RefManageR options
+BibOptions(
+  bib.style = "authoryear",
+  hyperlink = "to.bib",
+  style = "markdown",
+  max.names = 3L
+)
+```
+
+# Text as Data
+
+- Text Data for Social Scientists (not only):
+
+  - open ended survey responses, social media data, interview transcripts, electronic health records, news articles, official documents (laws, regulations, etc.), research publications, digital trace data
+
+- even if data of interest does not exist in textual form (yet): tools of speech recognition and machine translation, crowdworkers, etc.
+
+- *previously*: text data was often ignored, selectively read and used anecdotally or manually labeled
+ 
+- *now*: wide variety of text analytical methods (supervised + unsupervised) and increasing adoption from social scientists
+
+---
+# Text as Data
+
+```{r, fig.show="hold", out.width = "30%", fig.cap=''}
+knitr::include_graphics("wordcloud_2.png")
+knitr::include_graphics("wordcloud_1.png")
+knitr::include_graphics("wordcloud_3.png")
+```
+
+<font size="3"> <br>Sources from left to right: [Santos, Paulos & Guerreiro 2018](https://www.emerald.com/insight/content/doi/10.1108/IJEM-01-2017-0027/full/pdf?casa_token=4vYq-zNmJFkAAAAA:ncpw7fsdg97gbyLTPGxZVQSJ_GpdaLcyaWNo_r4DaNFRvijwBW5NRPpyV8u2SiNpBQRru04jVUhyO3imrfEK5kMtOM4nS5A4WtuGbBvr1-v1-Mrfxk48RQ);
+[Mostafa, M. 2018](https://journals.sagepub.com/doi/pdf/10.1177/1470785318771451);
+[Wood, M. 2018](https://www.liebertpub.com/doi/pdfplus/10.1089/cyber.2017.0669)</font size> 
+
+---
+# Text as Data
+
+```{r, fig.show="hold", out.width = "50%", fig.cap=''}
+knitr::include_graphics("sentiment_1.png")
+knitr::include_graphics("topics_1.png")
+```
+
+<font size="3"> <br>Source: [Mostafa, M. 2018](https://journals.sagepub.com/doi/pdf/10.1177/1470785318771451)</font size> 
+
+---
+# Language in NLP
+
+.gold[corpus]: a collection of documents
+
+.gold[documents]: single tweets, single statements, single text files, etc.
+
+.gold[tokenization]: refers to defining the unit of analysis, e.g., all single words, sequences of words or entire sentences (these are then your tokens)
+
+.gold[term / feature / n-grams]: single words or sequences of words with length “n” in a document
+
+.gold[bag of words (method)]: all tokens are put together in a “bag” without considering their order (alternative: bigrams (word pairs), word embeddings)
+  - simple bag of words approach might be problematic: “I’m not happy and I don’t like it!”
+  
+.gold[stop words]: very common but uninformative words such as “the”, “and”, “they”, etc.
+
+.gold[document-term/feature matrix (DTM/DFM)]: very common format for text data (more later on)
+
+---
+# A typical (R-) Workflow for Text Analysis
+
+1. **Retrieve data / data collection**
+
+2. **Data manipulation / Corpus pre-processing**
+
+3. **Vectorization (DTM/DFM)**
+
+4. **Analysis**
+
+5. Validation and Model Selection
+
+6. Visualization and Model Interpretation
+
+---
+# 1. Data collection
+
+- use existing corpora 
+  - R: {gutenbergr}: contains more than 60k book transcripts 
+  - R: [{quanteda.corpora}](https://github.com/quanteda/quanteda.corpora): multiple inherit corpora
+  - R: {topicmodels}: Associated Press data, 2246 news articles mostly from around 1988
+  - search for datasets, see e.g. [this list](https://docs.google.com/spreadsheets/d/1I7cvuCBQxosQK2evTcdL3qtglaEPc0WFEs6rZMx-xiE/edit#gid=0)
+  
+- collect new corpora
+  - electronic sources (APIs, Web Scraping), e.g. Twitter Data, Wikipedia entries, [transcripts of all german electoral programs](https://www.bundestagswahl-2021.de/wahlprogramme/)
+  - undigitized text, e.g. scans of documents
+  - data from  interviews, surveys and/or experiments
+
+- consider relevant applications to turn your data into text format (speech-to-text recognition, [pdf-to-text](https://en.wikipedia.org/wiki/Pdftotext), **O**ptical **C**haracter **R**ecognition)
+
+---
+# 2. Data manipulation
+
+- text data is different from “structured” data (e.g., a set of rows and columns)
+
+- most often not “clean” but rather messy
+  - shortcuts, dialect, wrong grammar, missing words, spelling issues, ambiguous language, humor
+  - web context: emoticons, #, etc.
+
+- **Investing some time in carefully cleaning and preparing your data might be one of the most crucial determinants for a successful text analysis!**
+
+---
+# 2. Data manipulation
+
+Common steps in pre-processing text data:
+  - stemming / lemmatization
+  - transformation to lower cases
+  - removal of punctuation (,;.-)
+  - removal of numbers
+  - removal of white space
+  - removal of URLs
+  - removal of stopwords 
+
+$\rightarrow$ Always choose your prepping steps carefully!
+
+$\rightarrow$ For instance removing punctuation might be a good idea in almost all projects, however some unhappy cases: “Let’s eat, Grandpa” vs. “Lets eat Grandpa.”  
+- unit of analysis! 
+
+
+???
+- Stemming a word: replacing it with its most basic conjugate form, computation, computational, computer -> compute, all three words now give the same “meaning” to the algorithm
+- The word "better" has "good" as its lemma. This link is missed by stemming, as it requires a dictionary look-up.
+
+---
+# 2. Data manipulation
+
+- In principle, all those transformations can be achieved by using base R
+
+- Other packages however provide ready-to-apply functions, such as [{tidytext}](https://cran.r-project.org/web/packages/tidytext/index.html), [{tm}](https://cran.r-project.org/web/packages/tm/index.html), [{quanteda}](https://cran.r-project.org/web/packages/quanteda/index.html) 
+each with its own advantages and shortcomings (examples on the next slides)
+
+- **Important**: to start pre-processing with this packages your data always has to be first transformed to a *corpus object* or alternatively to a *tidytext object* (examples on the next slides)
+
+- Finally, as your last step of pre-processing (before you start with the actual analysis) you have to transform your (cleaned) data into a format which is readable for for topic model functions (DTM/DFM) (*Step 3*)
+
+---
+# 2. Data manipulation: tidytext Example
+
+Pre-processing with {tidytext} requires a tidytext object
+  - each token of each individual is stored in one row
+  - “long format"
+
+```{r}
+library(quanteda)
+library(quanteda.corpora)
+library(dplyr)
+```
+
+
+First have a look at the original data I will use for the next examples (collection of guardian articles, n=20):
+
+```{r, results="raw"}
+guardian_corpus <- quanteda.corpora::download("data_corpus_guardian")
+
+text <- guardian_corpus[["documents"]][["texts"]]
+df <- as.data.frame(text)
+
+text <- df[1:20,]
+df <- as.data.frame(text)
+df <- tibble::rowid_to_column(df, "ID")
+
+str(df,5)
+dim(df)
+```
+
+---
+# 2. Data manipulation: tidytext Example
+
+- by using the unnest_tokens() function we transform the original data to a tidy dataframe
+
+```{r, echo=TRUE, results="raw"}
+# Load the tidytext package
+library(tidytext)
+
+# Create tidy format and remove stopwords
+tidy_df <- df %>%
+  unnest_tokens(word, text) %>% 
+  anti_join(stop_words) 
+
+str(tidy_df,5)
+dim(tidy_df)
+```
+---
+# 2. Data manipulation: tidytext Example
+
++: tidytext removes punctuation and makes all words lowercase automatically
+
+-: all other transformations need some dealing with [regular expressions](https://cbail.github.io/SICSS_Basic_Text_Analysis.html) (gsub, grep, etc.) -> consider alternative packages (examples on the next slides)
+
+  - Example to remove white space with tidytext (s+ describes a blank space)
+
+```{r, eval=F, echo=T}
+tidy_df$word <- gsub("\\s+","",tidy_df$word)
+```
+
++: with the tidytext format, regular R functions can be used instead of the specialized functions necessary to analyze a corpus object
+
+  - Example to count the most popular words in your texts:
+  
+```{r, eval=F, echo=T}
+tidy_df %>% count(word) %>% arrange(desc(n))
+```
+  
+
+---
+# 2. Data manipulation: tm Example
+
+- tm_map() function to apply cleaning functions to an entire corpus
+  - makes the cleaning steps easier
+  
+- Input data is not a tidy object but a corpus object
+  - corpus in R: group of documents with associated metadata
+  
+---
+# 2. Data manipulation: tm Example
+  
+```{r, echo=T, results="raw"}
+# Load the tm package
+library(tm)
+
+# Create a corpus
+corpus <- VCorpus(VectorSource(df$text))
+corpus
+```
+
+```{r, out.width = "70%", fig.align='center', fig.cap=''}
+knitr::include_graphics("corpus_1_tm.png")
+```
+---
+
+# 2. Data manipulation: tm Example
+
+```{r, echo=T, results="raw"}
+# Clean corpus
+corpus_clean <- corpus %>%
+  tm_map(removePunctuation, preserve_intra_word_dashes = TRUE) %>%
+  tm_map(removeNumbers) %>% 
+  tm_map(content_transformer(tolower)) %>% 
+  tm_map(removeWords, words = c(stopwords("en"))) %>% 
+  tm_map(stripWhitespace) %>% 
+  tm_map(stemDocument)
+```
+
+```{r, out.width = "70%", fig.align='center', fig.cap=''}
+knitr::include_graphics("corpus_2_tm.png")
+```
+
+---
+# 2. Data manipulation: quanteda Example
+
+- quanteda also uses a corpus object as its input
+- quanteda directly stores your prepped data in an dfm-format (see next slide for more information)
+
+```{r, echo=T}
+# Load quanteda package
+library(quanteda)
+
+# Store data in a corpus object
+corpus <- corpus(df$text)
+```
+
+```{r, out.width = "50%", fig.align='center', fig.cap=''}
+knitr::include_graphics("corpus_1_quanteda.png")
+```
+
+---
+# 2. Data manipulation: quanteda Example
+
+```{r, echo=T}
+dfm <- dfm(corpus,
+            stem = TRUE,
+            tolower = TRUE,
+            remove_twitter = FALSE,
+            remove_punct = TRUE,
+            remove_url = FALSE,
+            remove_numbers =TRUE,
+            verbose = TRUE,
+            remove = stopwords('english'))
+```
+
+```{r, out.width = "70%", fig.align='center', fig.cap=''}
+knitr::include_graphics("corpus_2_quanteda.png")
+```
+---
+# 2. Data manipulation: Summary
+
+- R offers many ways to achieve the same results
+
+- To start with, I would choose one package you feel comfortable with.. you will soon get a grasp for your data (and textual data in general) with advantages/disadvantages of different packages
+
+---
+
+# 3. Vectorization: Turning Text into a Matrix
+
+- Text analytical models (e.g., topic models) often require certain data formats 
+  - only so will algorithms be able to quickly compare one document to a lot of other documents to identify patterns
+
+- After having pre-processed your corpus, store your data into a format readable for topic-model approaches
+- Typically:  document-term matrix (DTM), sometimes also called document-feature matrix (DFM)
+  - DTM: matrix with each row being a document and each word being a column
+    - term-frequency (tf): The number within each cell describes the number of times the word appears in the document
+    - term frequency–inverse document frequency (tf-idf): weights the occurence of certain words, e.g., lowering the weight of the word “social” in an corpus of sociological articles
+    
+???
+
+td-idf: how often a word appears in a local context (such as a document) with how much it appears overall in the document collection
+
+---
+# 3. Vectorization: tidytext example
+
+Remember our tidy-format text data? (one-token-per-row)
+
+.pull-left[
+```{r, out.width = "30%", fig.align="center", fig.cap=''}
+knitr::include_graphics("tidytext_1.png")
+```
+]
+
+.pull-right[
+```{r, echo=T, eval=T}
+# Cast tidy data into DTM format
+dtm <- tidy_df %>% 
+  count(ID,word) %>%
+  cast_dtm(document=ID,
+                 term=word,
+                 value=n) %>%
+        as.matrix()
+dim(dtm)
+```
+]
+
+```{r, out.width = "50%", fig.align='right', fig.cap=''}
+knitr::include_graphics("tidytext_2.png")
+```
+---
+# 3. Vectorization: tm example
+
+- In case you pre-processed your data with {tm}, remember we ended with a cleaned corpus object
+- Now, simply put your corpus object into the DocumentTermMatrix function of the tm-package  
+
+```{r, echo=T, out.width="50%"}
+dtm_tm <- DocumentTermMatrix(corpus_clean, control = list(wordLengths = c(2, Inf))) # control argument here is specified to include words that are at least two characters long
+
+inspect(dtm_tm[1:3,3:8])
+```
+
+---
+# 3. Vectorization: quanteda example
+
+- quanteda combined cleaning and casting (dfm format) in one step, see slides before
+
+```{r, eval=F, echo=T}
+dfm <- dfm(corpus,
+            stem = TRUE,
+            tolower = TRUE,
+            remove_twitter = FALSE,
+            remove_punct = TRUE,
+            remove_url = FALSE,
+            remove_numbers =TRUE,
+            verbose = TRUE,
+            remove = stopwords('english'))
+```
+---
+# A typical (R-) Workflow for Text Analysis
+
+1. Retrieve data / data collection
+
+2. Data manipulation / Corpus pre-processing
+
+3. Vectorization (DTM/DFM)
+
+4. **Analysis**
+
+5. **Validation and Model Selection** ( $\rightarrow$ “lab”)
+
+6. **Visualization and Model Interpretation** ( $\rightarrow$ "lab”)
+
+---
+# 4. Analysis: Unsupervised text classification
+
+```{r, out.width = "50%", fig.align='center', fig.cap=''}
+knitr::include_graphics("grimmer_stewart.png")
+```
+
+<font size="3"> <br>Source: [Grimmer & Stewart 2013](https://www.cambridge.org/core/journals/political-analysis/article/text-as-data-the-promise-and-pitfalls-of-automatic-content-analysis-methods-for-political-texts/F7AAC8B2909441603FEB25C156448F20)</font size> 
+---
+# 4. Analysis: Topic Models
+
+Aim: 
+- discovering the hidden (i.e, latent) topics within the documents and assigning each of the topics to the documents
+
+- topic modeling: entirely unsupervised classification
+  - $\rightarrow$ no prior knowledge of your corpus or possible latent topics is needed (however some knowledge might help you validate your model later on) 
+  
+- Researcher only needs to specify number of topics (not as intuitive as it sounds!)
+
+---
+# 4. Analysis: Topic Models
+
+- **latent dirichlet allocation (LDA)** 
+
+- one of the most popular topic model algorithms, developed by a team of computer linguists (David Blei, Andrew Ng und Michael Jordan, [original paper](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)) 
+
+- two assumptions:
+  - 1) each document is mixture over latent topics,
+      - For example, in a two-topic model we could say “Document 1 is 90% topic A and 10% topic B, while Document 2 is 30% topic A and 70% topic B.”
+  - 2) each topic is a mixture of words (with possible overlap)
+
+---
+
+```{r, out.width = "40%", fig.align='center', fig.cap=''}
+knitr::include_graphics("topic-models-Blei.png")
+```
+
+<font size="4"> <br>Source: [Blei, Ng, Jordan (2003)](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)</font size> 
+---
+# 4. LDA in 4 steps
+
+<font size="4.5">
+1) specify number of topics ( $k$ )
+
+2) each word ( $w$ ) in each document ( $d$ ) is randomly assigned to 1 topic (assignment involves a [Dirichlet distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution)) 
+  
+3) these topic assignments for each word are then updated in a process of iterative allocation (Gibbs Sampler) 
+  - namely: again, for each $w$ in each $d$ two probabilities are repeatedly calculated:
+    - a) “document”-level: proportion of words in $d_1$ belonging to a certain topic $t$ (beta) -> relative importance of topics in documents
+    - b) “word”-level: proportion of words being assigned to a certain topic $t$ in all other documents (gamma) -> relative importance of words in topics
+  - each $w$ is reassigned a new topic $t$ where $t$ is chosen as the probability of $p = beta*gamma$ (-> overall probability that $t$ generated the $w$, put differently: overall probability that that word $w$ belongs to topic 1, 2, 3 or 4 (if k was set to 4)
+
+4) Assignment stops after user-specified threshold,	or when iterations begin to have little impact on	the probabilities	assigned to words in	the corpus.</font size> 
+--
+
+<font size="4"> 
+https://cbail.github.io/SICSS_Topic_Modeling.html<br>
+https://textbook.coleridgeinitiative.org/chap-text.html</font size> 
+
+---
+# 4. Analysis: Topic Models
+
+- structural topic model (STM) as an extension of the LDA
+
+- more than a simple bag-of-words approach
+
+- especially useful for social scientists who are interest in modeling effects of covariates (e.g., sociodemographics, but also time as a covariate)
+
+---
+
+class: center, middle
+
+# STM Example: 
+Whose ideas are worth spreading? The representation of women and ethnic groups in TED talks
+
+---
+# STM Example
+
+- 2019, Carsten Schwemmer & Sebastian Jungkunz
+- original paper: https://www.tandfonline.com/doi/full/10.1080/2474736X.2019.1646102
+- replication files: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/EUDWP3
+
+- **Research Questions**: 
+
+How are women and different ethnic groups represented in TED Talks?
+Which topics do TED Talks generally cover? Which topics are covered by women and different ethnic groups? Do different topics / speakers lead to different sentiment?
+
+- **Data**:
+
+- transcripts of over 2333 TED talks from the TED Website
+- facial recognition API: characteristics of speakers, e.g., gender and ethnicity
+- Youtube Data API: YT metadata, e.g., likes, comments and views
+
+---
+
+class: center, middle
+
+#Example: Structural Topic Model
+
+https://clandesv.github.io/ted-talks-STM/stm_replication.html
+
