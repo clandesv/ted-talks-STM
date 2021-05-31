@@ -79,7 +79,7 @@ BibOptions(
 
 # Text as Data
 
-- Text Data for Social Scientists (not only):
+- Text Data for Social Scientists:
 
   - open ended survey responses, social media data, interview transcripts, electronic health records, news articles, official documents (laws, regulations, etc.), research publications, digital trace data
 
@@ -177,13 +177,13 @@ Common steps in pre-processing text data:
   - stemming
     - computation, computational, computer $\rightarrow$ compute
   - lemmatization
-    - "good" is the lemma of "better"
+    - "good" $\rightarrow$ "better"
   - transformation to lower cases
   - removal of punctuation (,;.-) / numbers / white spaces / URLs / stopwords
 
 $\rightarrow$ Always choose your prepping steps carefully! 
 
-For instance removing punctuation might be a good idea in almost all projects, however think of unhappy cases: “Let’s eat, Grandpa” vs. “Lets eat Grandpa.”  
+For instance removing punctuation might be a good idea in almost all projects, however think of unhappy cases: “Let’s eat, Grandpa” vs. “Lets eat Grandpa.”
 - unit of analysis! (sentence vs. unigram)
 
 ---
@@ -194,7 +194,7 @@ For instance removing punctuation might be a good idea in almost all projects, h
 - Other packages however provide ready-to-apply functions, such as [{tidytext}](https://cran.r-project.org/web/packages/tidytext/index.html), [{tm}](https://cran.r-project.org/web/packages/tm/index.html), [{quanteda}](https://cran.r-project.org/web/packages/quanteda/index.html) 
   - each with its own advantages and shortcomings (examples on the next slides)
 
-- **Important**: to start pre-processing with this packages your data always has to be first transformed to a *corpus object* or alternatively to a *tidy text object* (*examples on the next slides*)
+- **Important**: to start pre-processing with this packages your data always has to be first transformed to a **corpus object** or alternatively to a **tidy text object** (*examples on the next slides*)
 
 ---
 # 2. Data manipulation: tidytext Example
@@ -396,6 +396,7 @@ knitr::include_graphics("tidytext_2.PNG")
 ---
 # 3. Vectorization: tm example
 
+<font size="4">
 - In case you pre-processed your data with {tm}, remember we ended with a cleaned corpus object
 - Now, simply put your corpus object into the DocumentTermMatrix function of the tm-package  
 
@@ -405,6 +406,8 @@ dtm_tm <- DocumentTermMatrix(corpus_clean, control = list(wordLengths = c(2, Inf
 inspect(dtm_tm[1:3,3:8])
 ```
 
+- for quanteda example: look at the previous slide with the quanteda example ;-)
+</font size>
 ---
 
 # A typical (R-) Workflow for Text Analysis
@@ -445,11 +448,10 @@ knitr::include_graphics("tm_overview_christine-doig.PNG")
 
 
 ---
-# 4. Analysis: Topic Models
+# 4. Analysis: Latent Dirichlet Allocation (LDA)
 
-- **latent dirichlet allocation (LDA)** 
-
-- one of the most popular topic model algorithms, developed by a team of computer linguists (David Blei, Andrew Ng und Michael Jordan, [original paper](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)) 
+- one of the most popular topic model algorithms
+- developed by a team of computer linguists (David Blei, Andrew Ng und Michael Jordan, [original paper](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)) 
 
 - two assumptions:
 
@@ -459,7 +461,7 @@ knitr::include_graphics("tm_overview_christine-doig.PNG")
   - 2) each topic is a mixture of words (with possible overlap)
 
 ---
-# 4. Analysis: Topic Models
+# 4. Analysis: Latent Dirichlet Allocation (LDA)
 
 ```{r, out.width = "40%", fig.align='center', fig.cap=''}
 knitr::include_graphics("topic-models-Blei.PNG")
@@ -490,7 +492,7 @@ knitr::include_graphics("topic-models-Blei.PNG")
   
 - especially useful for social scientists who are interested in modeling effects of covariates (e.g., year, author, sociodemographics, time as a covariate, source)
 
-- generally, by allowing to include such metadata STM is more than a simple bag-of-words approach
+- generally, by allowing to include such metadata STM exceeds a simple bag-of-words approach
 
 .footnote[<font size="3"><br>^for an detailed explanation of differences between LDA and STM, read [here](https://towardsdatascience.com/introduction-to-the-structural-topic-model-stm-34ec4bd5383#:~:text=If%20you%20are%20interested%20in,a%20couple%20different%20algorithms%20(the)]
 
