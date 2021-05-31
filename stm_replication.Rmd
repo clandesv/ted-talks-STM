@@ -27,7 +27,7 @@ Extensive replication files with R code, plots and data are made available via t
 
 Apart from benefiting from their excellent replication files which everyone can easily access, there are other resources, who have used the TED data to demonstrate topic models. See e.g., this [script](https://bookdown.org/joone/ComputationalMethods/topicmodeling.html#topic-modeling-mit-stm) for a complete workflow in german language.
 
-For further ideas, especially with regards to visualization and pre-processing of textual data have a look at [Julia Silges](https://juliasilge.com/) work. Together with [David Robinson](http://varianceexplained.org/) she also published excellent guidelines on the [tidytext R package](https://www.tidytextmining.com/). [Here](https://juliasilge.com/blog/sherlock-holmes-stm/) and [here](https://juliasilge.com/blog/evaluating-stm/) are two blog posts on the specific task of Structural Topic Modely by Julia Silge:
+For further ideas, especially with regards to visualization and pre-processing of textual data have a look at [Julia Silges](https://juliasilge.com/) work. Together with [David Robinson](http://varianceexplained.org/) she also published excellent guidelines on the [tidytext R package](https://www.tidytextmining.com/). [Here](https://juliasilge.com/blog/sherlock-holmes-stm/) and [here](https://juliasilge.com/blog/evaluating-stm/) are two blog posts on the specific task of Structural Topic Models by Julia Silge.
 
 ## Setup
 
@@ -101,9 +101,9 @@ ted_corpus <- corpus(df$text)
 ted_corpus[1:5]
 ```
 
-### Step 2: Clean Corpus and cast data into a DFM/DTM
+### Step 2: Clean Corpus and cast data into a DFM
 
-Now we engage in multiple data manipulation steps, for instance we remove all punctuation (remove_punct) and convert all characters to lower case (tolower). At the same time, we convert our corpus object into a document-feature matrix (DFM).
+Now we perform multiple data manipulation steps, for instance we remove all punctuation (remove_punct) and convert all characters to lower case (tolower). At the same time, we convert our corpus object into a document-feature matrix (DFM).
 
 ```{r message=FALSE, warning=FALSE}
 # with quanteda (combines cleaning and casting in one step)
@@ -192,7 +192,8 @@ effect_stm_20 <- estimateEffect(1:20 ~ s(date_num, degree = 2) +
 #summary(effect_stm_20)
 ```
 
-## The optimal number of k 
+## Validation and Model Selection
+### The optimal number of k 
 
 This far, we simply decided to set k (= the number of topics) to 20, i.e. we expect our selection of TED talks to cover 20 topics. This was pure guessing. There are many different ways of how to specify k (informed guessing via theory and previous research, [rule of thumb](https://cran.r-project.org/web/packages/stm/stm.pdf), manual labeling of a subset, **statistical measures**).
 
@@ -238,7 +239,7 @@ stm50<-stm_20_30_40_50[[4,2]]
 stm50
 ```
 
-### Validation and Evaluation based on statistical measures
+### Semantic Coherence and Exclusivity
 
 There is a variety of statistical measures to evaluate your model, see for instance [here](https://juliasilge.com/blog/evaluating-stm/).
 
@@ -285,9 +286,9 @@ model_scores %>%
   theme_bw()
 ```
 
-## $\rightarrow$ TED Talks contain 30 topics!
+### TED Talks contain 30 topics!
 
-## Visualizations
+## Visualization and Model Interpretation
 
 After inspecting the different topic models, we found that the model with 30 topics includes the most useful topics for our analysis. 
 
@@ -324,6 +325,13 @@ td_beta %>%
 ```
 
 Unfortunately, with this high number of topics (remember, k is set to 30 here), the small multiples get quite small. Maybe consider to use a shiny app to explore all your topics. For an demonstration see [here](https://juliasilge.shinyapps.io/sherlock-holmes/#section-words-by-topic).
+
+### Top words per topic
+
+```{r message=FALSE, warning=FALSE}
+# By using summary() you receive top words for all 20 topics
+summary(stm30[[1]])
+```
 
 ### One final plot 
 
