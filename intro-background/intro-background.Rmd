@@ -458,21 +458,25 @@ dfm <- dfm(corpus,
 ---
 # 4. Analysis: Unsupervised text classification
 
-```{r, out.width = "50%", fig.align='center', fig.cap=''}
-knitr::include_graphics("grimmer_stewart.PNG")
+```{r, out.width = "70%", fig.align='center', fig.cap=''}
+knitr::include_graphics("ml_overview_christine-doig.PNG")
 ```
 
-<font size="3"> <br>Source: [Grimmer & Stewart 2013](https://www.cambridge.org/core/journals/political-analysis/article/text-as-data-the-promise-and-pitfalls-of-automatic-content-analysis-methods-for-political-texts/F7AAC8B2909441603FEB25C156448F20)</font size> 
+<font size="3"> <br>Source: [Christine Doig](http://chdoig.github.io/pygotham-topic-modeling/#/2/1)</font size> 
 ---
 # 4. Analysis: Topic Models
 
-Aim: 
+<font size="4">Aim: 
 - discovering the hidden (i.e, latent) topics within the documents and assigning each of the topics to the documents
-
 - topic modeling: entirely unsupervised classification
   - $\rightarrow$ no prior knowledge of your corpus or possible latent topics is needed (however some knowledge might help you validate your model later on) 
-  
-- Researcher only needs to specify number of topics (not as intuitive as it sounds!)
+- Researcher only needs to specify number of topics (not as intuitive as it sounds!)</font size>
+
+```{r, out.width = "40%", fig.align='left', fig.cap=''}
+knitr::include_graphics("tm_overview_christine-doig.PNG")
+```
+<font size="3"> <br>Source: http://chdoig.github.io/pygotham-topic-modeling/#/2/1</font size>
+
 
 ---
 # 4. Analysis: Topic Models
