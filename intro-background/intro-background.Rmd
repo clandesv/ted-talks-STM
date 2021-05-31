@@ -98,9 +98,9 @@ knitr::include_graphics("wordcloud_1.PNG")
 knitr::include_graphics("wordcloud_3.PNG")
 ```
 
-<font size="3"> <br>Sources from left to right: [Santos, Paulos & Guerreiro 2018](https://www.emerald.com/insight/content/doi/10.1108/IJEM-01-2017-0027/full/pdf?casa_token=4vYq-zNmJFkAAAAA:ncpw7fsdg97gbyLTPGxZVQSJ_GpdaLcyaWNo_r4DaNFRvijwBW5NRPpyV8u2SiNpBQRru04jVUhyO3imrfEK5kMtOM4nS5A4WtuGbBvr1-v1-Mrfxk48RQ);
+.footnote[<font size="3"><br>Sources from left to right: [Santos, Paulos & Guerreiro 2018](https://www.emerald.com/insight/content/doi/10.1108/IJEM-01-2017-0027/full/pdf?casa_token=4vYq-zNmJFkAAAAA:ncpw7fsdg97gbyLTPGxZVQSJ_GpdaLcyaWNo_r4DaNFRvijwBW5NRPpyV8u2SiNpBQRru04jVUhyO3imrfEK5kMtOM4nS5A4WtuGbBvr1-v1-Mrfxk48RQ);
 [Mostafa, M. 2018](https://journals.sagepub.com/doi/pdf/10.1177/1470785318771451);
-[Wood, M. 2018](https://www.liebertpub.com/doi/pdfplus/10.1089/cyber.2017.0669)</font size> 
+[Wood, M. 2018](https://www.liebertpub.com/doi/pdfplus/10.1089/cyber.2017.0669)</font size>] 
 
 ---
 # Text as Data
@@ -110,7 +110,7 @@ knitr::include_graphics("sentiment_1.PNG")
 knitr::include_graphics("topics_1.PNG")
 ```
 
-<font size="3"> <br>Source: [Mostafa, M. 2018](https://journals.sagepub.com/doi/pdf/10.1177/1470785318771451)</font size> 
+.footnote[<font size="3"><br>Source: [Mostafa, M. 2018](https://journals.sagepub.com/doi/pdf/10.1177/1470785318771451)</font size>] 
 
 ---
 # Language in NLP
@@ -119,16 +119,14 @@ knitr::include_graphics("topics_1.PNG")
 
 .gold[documents]: single tweets, single statements, single text files, etc.
 
-.gold[tokenization]: refers to defining the unit of analysis, e.g., single words, sequences of words or entire sentences
+.gold[tokenization]: refers to defining the unit of analysis, e.g., single words, sequences of words or entire sentences (referred to as .gold[tokens])
 
-.gold[tokens / term / feature / n-grams]: single words or sequences of words with length “n” in a document
-
-.gold[bag of words (method)]: for analysis all tokens are put together in a “bag” without considering their order (alternatively: bigrams (word pairs), word embeddings) 
-- simple bag of words approach can get problematic: “I’m not *happy* and I don’t *like* it!”
+.gold[bag of words (method)]: approach where all tokens are put together in a “bag” without considering their order (alternatively: .gold[bigrams (word pairs), word embeddings]) 
+- possible issues with a simple bag-of-word: “I’m not *happy* and I don’t *like* it!”
   
-.gold[stop words]: very common but uninformative words such as “the”, “and”, “they”, etc.
+.gold[stop words]: very common but uninformative terms such as “the”, “and”, “they”, etc.
 
-.gold[document-term/feature matrix (DTM/DFM)]: very common format for text data (more later on)
+.gold[document-term/feature matrix (DTM/DFM)]: common format to store text data (more later on)
 
 ---
 # A typical (R-) Workflow for Text Analysis
@@ -155,7 +153,7 @@ knitr::include_graphics("topics_1.PNG")
   - search for datasets, see e.g. [this list](https://docs.google.com/spreadsheets/d/1I7cvuCBQxosQK2evTcdL3qtglaEPc0WFEs6rZMx-xiE/edit#gid=0)
   
 - collect new corpora
-  - electronic sources (APIs, Web Scraping), e.g. Twitter Data, Wikipedia entries, [transcripts of all german electoral programs](https://www.bundestagswahl-2021.de/wahlprogramme/)
+  - electronic sources (APIs, Web Scraping), e.g. Twitter, Wikipedia, [transcripts of all german electoral programs](https://www.bundestagswahl-2021.de/wahlprogramme/)
   - undigitized text, e.g. scans of documents
   - data from  interviews, surveys and/or experiments
 
@@ -170,30 +168,23 @@ knitr::include_graphics("topics_1.PNG")
   - shortcuts, dialect, wrong grammar, missing words, spelling issues, ambiguous language, humor
   - web context: emoticons, #, etc.
 
-- **Investing some time in carefully cleaning and preparing your data might be one of the most crucial determinants for a successful text analysis!**
+- Investing some time in carefully cleaning and preparing your data might be one of the most crucial determinants for a successful text analysis!
 
 ---
 # 2. Data manipulation
 
 Common steps in pre-processing text data:
-  - stemming / lemmatization
+  - stemming
     - computation, computational, computer $\rightarrow$ compute
+  - lemmatization
+    - "good" is the lemma of "better"
   - transformation to lower cases
-  - removal of punctuation (,;.-)
-  - removal of numbers
-  - removal of white space
-  - removal of URLs
-  - removal of stopwords 
+  - removal of punctuation (,;.-) / numbers / white spaces / URLs / stopwords
 
-$\rightarrow$ Always choose your prepping steps carefully!
+$\rightarrow$ Always choose your prepping steps carefully! 
 
-$\rightarrow$ For instance removing punctuation might be a good idea in almost all projects, however think of unhappy cases: “Let’s eat, Grandpa” vs. “Lets eat Grandpa.”  
+For instance removing punctuation might be a good idea in almost all projects, however think of unhappy cases: “Let’s eat, Grandpa” vs. “Lets eat Grandpa.”  
 - unit of analysis! (sentence vs. unigram)
-
-
-???
-- Stemming a word: replacing it with its most basic conjugate form, computation, computational, computer -> compute, all three words now give the same “meaning” to the algorithm
-- The word "better" has "good" as its lemma. This link is missed by stemming, as it requires a dictionary look-up.
 
 ---
 # 2. Data manipulation
@@ -205,13 +196,11 @@ $\rightarrow$ For instance removing punctuation might be a good idea in almost a
 
 - **Important**: to start pre-processing with this packages your data always has to be first transformed to a *corpus object* or alternatively to a *tidy text object* (*examples on the next slides*)
 
-- Finally, as your last step of pre-processing (before you start with the actual analysis) you have to transform your (cleaned) data into a format which is readable for text analytical functions (i.e., DTM/DFM) (*Step 3*)
-
 ---
 # 2. Data manipulation: tidytext Example
 
 Pre-processing with {tidytext} requires a tidy text object:
-  - here, each token of each individual is stored in one row
+  - one-token-per-row
   - “long format"
 
 ```{r}
@@ -220,8 +209,7 @@ library(quanteda.corpora)
 library(dplyr)
 ```
 
-
-First have a look at the original data I will use for the next examples ([collection of guardian articles](https://github.com/quanteda/quanteda.corpora), n=20):
+First have a look at the original data ([collection of guardian articles](https://github.com/quanteda/quanteda.corpora), n=20):
 
 ```{r, results="raw"}
 guardian_corpus <- quanteda.corpora::download("data_corpus_guardian")
@@ -237,13 +225,14 @@ str(df,5)
 dim(df)
 ```
 
-**.gold[Q: Can you describe the above dataset? How many variables and observations does it have? What do the variables display?]**
+.gold[Q: Can you describe the above dataset? How many variables and observations are there? What do the variables display?]
+
 ---
 # 2. Data manipulation: tidytext Example
 
 <font size="4"> - by using the unnest_tokens() function we transform the original data to a tidy text format
 
-**.gold[Q: How does our dataset change after tokenization and removing stopwords? How many observations do we now have? And what does the ID variable identify/store?]**
+.gold[Q: How does our dataset change after tokenization and removing stopwords? How many observations do we now have? And what does the ID variable identify/store?]
 
 
 ```{r, echo=TRUE, results="raw"}
@@ -275,24 +264,17 @@ tidy_df$word <- gsub("\\s+","",tidy_df$word)
 
 +: with the tidy text format, regular R functions can be used instead of the specialized functions necessary to analyze a corpus object
 
-  - Example to count the most popular words in your texts:
+  - dplyr example to count the most popular words in your texts
   
 ```{r, eval=F, echo=T}
 tidy_df %>% count(word) %>% arrange(desc(n))
 ```
   
-
 ---
 # 2. Data manipulation: tm Example
 
-- tm_map() function to apply cleaning functions to an entire corpus
-  - makes the cleaning steps easier
-  
 - Input data is not a tidy text object but a corpus object
   - corpus in R: group of documents with associated metadata
-  
----
-# 2. Data manipulation: tm Example
   
 ```{r, echo=T, results="raw"}
 # Load the tm package
@@ -307,8 +289,9 @@ corpus
 knitr::include_graphics("corpus_1_tm.PNG")
 ```
 ---
-
 # 2. Data manipulation: tm Example
+
+- tm_map() functions can be applied to a whole corpus
 
 ```{r, echo=T, results="raw"}
 # Clean corpus
@@ -328,8 +311,7 @@ knitr::include_graphics("corpus_2_tm.PNG")
 ---
 # 2. Data manipulation: quanteda Example
 
-- quanteda also uses a corpus object as its input
-- quanteda directly stores your prepped data in an dfm-format (see next slide for more information)
+- Input data again is a corpus object
 
 ```{r, echo=T}
 # Load quanteda package
@@ -345,6 +327,8 @@ knitr::include_graphics("corpus_1_quanteda.PNG")
 
 ---
 # 2. Data manipulation: quanteda Example
+
+- quanteda combines prepping and dfm-transformation in one step (see next slides on vectorization for more information)
 
 ```{r, echo=T}
 dfm <- dfm(corpus,
@@ -364,22 +348,21 @@ knitr::include_graphics("corpus_2_quanteda.PNG")
 ---
 # 2. Data manipulation: Summary
 
-- R (as usual) offers many ways to achieve the same results
+- R (as usual) offers many ways to achieve similar or same results
 
-- To start with, I would choose one package you feel comfortable with and go with it.. you will soon get a grasp for your data (and textual data in general) with advantages/disadvantages of different packages :-)
+- To start with, I would choose one package you feel comfortable with and go with it.. you will soon get a grasp for your data (and textual data in general) with advantages and disadvantages of different packages :-)
 
 ---
 
 # 3. Vectorization: Turning Text into a Matrix
 
-- Text analytical models (e.g., topic models) often require certain data formats as input
+- Text analytical models (e.g., topic models) often require certain your data to be stored in a special format
   - only so will algorithms be able to quickly compare one document to a lot of other documents to identify patterns
 
-- $\rightarrow$ After having pre-processed your corpus, store your data in a format readable for topic-model approaches
-- Typically: **document-term matrix (DTM)**, sometimes also called document-feature matrix (DFM)
-  - DTM: matrix with each row being a document and each word being a column
-    - **term-frequency (tf)**: The number within each cell describes the number of times the word appears in the document
-    - **term frequency–inverse document frequency (tf-idf)**: weights the occurence of certain words, e.g., lowering the weight of the word “social” in an corpus of sociological articles
+- Typically: **document-term matrix (DTM)**, sometimes also called **document-feature matrix (DFM)**
+  - matrix with each row being a document and each word being a column
+    - term-frequency (tf): The number within each cell describes the number of times the word appears in the document
+    - term frequency–inverse document frequency (tf-idf): weights the occurence of certain words, e.g., lowering the weight of the word “social” in an corpus of sociological articles
     
 ???
 
@@ -388,15 +371,12 @@ td-idf: how often a word appears in a local context (such as a document) with ho
 ---
 # 3. Vectorization: tidytext example
 
-Remember our tidy text formatted data? (one-token-per-row)
+<font size="3">Remember our tidy text formatted data (one-token-per-row)?
 
-.pull-left[
-```{r, out.width = "30%", fig.align="center", fig.cap=''}
+```{r, out.width = "10%", fig.align="center", fig.cap=''}
 knitr::include_graphics("tidytext_1.PNG")
 ```
-]
 
-.pull-right[
 ```{r, echo=T, eval=T}
 # Cast tidy text data into DTM format
 dtm <- tidy_df %>% 
@@ -407,11 +387,12 @@ dtm <- tidy_df %>%
         as.matrix()
 dim(dtm)
 ```
-]
 
-```{r, out.width = "50%", fig.align='right', fig.cap=''}
+```{r, out.width = "40%", fig.cap=''}
 knitr::include_graphics("tidytext_2.PNG")
 ```
+</font size>
+
 ---
 # 3. Vectorization: tm example
 
@@ -425,22 +406,7 @@ inspect(dtm_tm[1:3,3:8])
 ```
 
 ---
-# 3. Vectorization: quanteda example
 
-- quanteda combined cleaning and casting (dfm format) in one step, see slides before
-
-```{r, eval=F, echo=T}
-dfm <- dfm(corpus,
-            stem = TRUE,
-            tolower = TRUE,
-            remove_twitter = FALSE,
-            remove_punct = TRUE,
-            remove_url = FALSE,
-            remove_numbers =TRUE,
-            verbose = TRUE,
-            remove = stopwords('english'))
-```
----
 # A typical (R-) Workflow for Text Analysis
 
 1. Retrieve data / data collection
@@ -462,7 +428,7 @@ dfm <- dfm(corpus,
 knitr::include_graphics("ml_overview_christine-doig.PNG")
 ```
 
-<font size="3"> <br>Source: [Christine Doig](http://chdoig.github.io/pygotham-topic-modeling/#/2/1)</font size> 
+.footnote[<font size="3"><br>Source: [Christine Doig 2015](http://chdoig.github.io/pygotham-topic-modeling/#/2/1)</font size>] 
 ---
 # 4. Analysis: Topic Models
 
@@ -475,7 +441,7 @@ knitr::include_graphics("ml_overview_christine-doig.PNG")
 ```{r, out.width = "40%", fig.align='left', fig.cap=''}
 knitr::include_graphics("tm_overview_christine-doig.PNG")
 ```
-<font size="3"> <br>Source: http://chdoig.github.io/pygotham-topic-modeling/#/2/1</font size>
+.footnote[<font size="3"><br>Source: [Christine Doig 2015](http://chdoig.github.io/pygotham-topic-modeling/#/2/6)</font size>]
 
 
 ---
@@ -499,9 +465,9 @@ knitr::include_graphics("tm_overview_christine-doig.PNG")
 knitr::include_graphics("topic-models-Blei.PNG")
 ```
 
-<font size="4"> <br>Source: [Blei, Ng, Jordan (2003)](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)</font size> 
+.footnote[<font size="3"><br>Source: [Blei, Ng, Jordan (2003)](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)</font size>] 
 ---
-# 4. LDA in 4 steps
+# 4. Analysis: Latent Dirichlet Allocation
 
 <font size="4.5">
 1) specify number of topics (*k*)
@@ -515,20 +481,18 @@ knitr::include_graphics("topic-models-Blei.PNG")
   - each word is reassigned to a new topic which is chosen as the probability of *p = beta x gamma* (-> overall probability that a certian topic generated the respective word *w*, put differently: overall probability that that *w* belongs to topic 1, 2, 3 or 4 (if *k* was set to 4)
 
 4) Assignment stops after user-specified threshold,	or when iterations begin to have little impact on	the probabilities	assigned to words in	the corpus</font size> 
---
-
-<font size="4"> 
-https://cbail.github.io/SICSS_Topic_Modeling.html<br>
-https://textbook.coleridgeinitiative.org/chap-text.html</font size> 
 
 ---
-# 4. Analysis: Topic Models
+# 4. Analysis: Structural Topic Models
 
-- **structural topic model (STM)** as an extension of LDA
+- Structural Topic Models (STM) employs main ideas of LDA but adds a couple more features on top^
+  - e.g., STM recognizes if topics might be related to one another (e.g., if document 1 contains topic *A* it might be very likely that it also contains topic *B*, but not topic *C* - Correlated Topic Model) 
+  
+- especially useful for social scientists who are interested in modeling effects of covariates (e.g., year, author, sociodemographics, time as a covariate, source)
 
-- more than a simple bag-of-words approach
+- generally, by allowing to include such metadata STM is more than a simple bag-of-words approach
 
-- especially useful for social scientists who are interest in modeling effects of covariates (e.g., sociodemographics, time as a covariate)
+.footnote[<font size="3"><br>^for an detailed explanation of differences between LDA and STM, read [here](https://towardsdatascience.com/introduction-to-the-structural-topic-model-stm-34ec4bd5383#:~:text=If%20you%20are%20interested%20in,a%20couple%20different%20algorithms%20(the)]
 
 ---
 
@@ -540,7 +504,7 @@ Whose ideas are worth spreading? The representation of women and ethnic groups i
 ---
 # STM Example
 
-- 2019, Carsten Schwemmer & Sebastian Jungkunz
+- Carsten Schwemmer & Sebastian Jungkunz (2019)
 - original paper: https://www.tandfonline.com/doi/full/10.1080/2474736X.2019.1646102
 - replication files: https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/EUDWP3
 
