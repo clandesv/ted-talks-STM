@@ -203,14 +203,14 @@ $\rightarrow$ For instance removing punctuation might be a good idea in almost a
 - Other packages however provide ready-to-apply functions, such as [{tidytext}](https://cran.r-project.org/web/packages/tidytext/index.html), [{tm}](https://cran.r-project.org/web/packages/tm/index.html), [{quanteda}](https://cran.r-project.org/web/packages/quanteda/index.html) 
   - each with its own advantages and shortcomings (examples on the next slides)
 
-- **Important**: to start pre-processing with this packages your data always has to be first transformed to a *corpus object* or alternatively to a *tidytext object* (*examples on the next slides*)
+- **Important**: to start pre-processing with this packages your data always has to be first transformed to a *corpus object* or alternatively to a *tidy text object* (*examples on the next slides*)
 
 - Finally, as your last step of pre-processing (before you start with the actual analysis) you have to transform your (cleaned) data into a format which is readable for text analytical functions (i.e., DTM/DFM) (*Step 3*)
 
 ---
 # 2. Data manipulation: tidytext Example
 
-Pre-processing with {tidytext} requires a tidytext object:
+Pre-processing with {tidytext} requires a tidy text object:
   - here, each token of each individual is stored in one row
   - “long format"
 
@@ -237,20 +237,20 @@ str(df,5)
 dim(df)
 ```
 
-.gold[Q: Can you describe the above dataset? How many variables and observations does it have? What do the variables display?]
+**.gold[Q: Can you describe the above dataset? How many variables and observations does it have? What do the variables display?]**
 ---
 # 2. Data manipulation: tidytext Example
 
-<font size="4"> - by using the unnest_tokens() function we transform the original data to a tidy dataframe
+<font size="4"> - by using the unnest_tokens() function we transform the original data to a tidy text format
 
-.gold[Q: How does our dataset change after tokenization and removing stopwords? How many observations do we now have?]
+**.gold[Q: How does our dataset change after tokenization and removing stopwords? How many observations do we now have? And what does the ID variable identify/store?]**
 
 
 ```{r, echo=TRUE, results="raw"}
 # Load the tidytext package
 library(tidytext)
 
-# Create tidy format and remove stopwords
+# Create tidy text format and remove stopwords
 tidy_df <- df %>%
   unnest_tokens(word, text) %>% 
   anti_join(stop_words) 
@@ -273,7 +273,7 @@ dim(tidy_df)
 tidy_df$word <- gsub("\\s+","",tidy_df$word)
 ```
 
-+: with the tidytext format, regular R functions can be used instead of the specialized functions necessary to analyze a corpus object
++: with the tidy text format, regular R functions can be used instead of the specialized functions necessary to analyze a corpus object
 
   - Example to count the most popular words in your texts:
   
@@ -288,7 +288,7 @@ tidy_df %>% count(word) %>% arrange(desc(n))
 - tm_map() function to apply cleaning functions to an entire corpus
   - makes the cleaning steps easier
   
-- Input data is not a tidy object but a corpus object
+- Input data is not a tidy text object but a corpus object
   - corpus in R: group of documents with associated metadata
   
 ---
@@ -388,7 +388,7 @@ td-idf: how often a word appears in a local context (such as a document) with ho
 ---
 # 3. Vectorization: tidytext example
 
-Remember our tidy-format text data? (one-token-per-row)
+Remember our tidy text formatted data? (one-token-per-row)
 
 .pull-left[
 ```{r, out.width = "30%", fig.align="center", fig.cap=''}
@@ -398,7 +398,7 @@ knitr::include_graphics("tidytext_1.PNG")
 
 .pull-right[
 ```{r, echo=T, eval=T}
-# Cast tidy data into DTM format
+# Cast tidy text data into DTM format
 dtm <- tidy_df %>% 
   count(ID,word) %>%
   cast_dtm(document=ID,
@@ -500,15 +500,15 @@ knitr::include_graphics("topic-models-Blei.PNG")
 # 4. LDA in 4 steps
 
 <font size="4.5">
-1) specify number of topics ( $k$ )
+1) specify number of topics (*k*)
 
-2) each word ( $w$ ) in each document ( $d$ ) is randomly assigned to 1 topic (assignment involves a [Dirichlet distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution)) 
+2) each word (*w*) in each document (*d*) is randomly assigned to one topic (assignment involves a [Dirichlet distribution](https://en.wikipedia.org/wiki/Dirichlet_distribution)) 
   
-3) these topic assignments for each word are then updated in a process of iterative allocation ([Gibbs Sampler](https://medium.com/analytics-vidhya/topic-modeling-using-lda-and-gibbs-sampling-explained-49d49b3d1045)) 
-  - namely: again, for each $w$ in each $d$ two probabilities are repeatedly calculated:
-    - a) “document”-level: proportion of words in document 1 belonging to a certain topic $t$ (beta) -> relative importance of topics in documents
-    - b) “word”-level: proportion of words being assigned to a certain topic $t$ in all other documents (gamma) -> relative importance of words in topics
-  - each $w$ is reassigned a new topic $t$ where $t$ is chosen as the probability of $p = beta*gamma$ (-> overall probability that $t$ generated the respective $w$, put differently: overall probability that that word $w$ belongs to topic 1, 2, 3 or 4 (if $k$ was set to 4)
+3) these topic assignments for each word *w* are then updated in an iterative fashion ([Gibbs Sampler](https://medium.com/analytics-vidhya/topic-modeling-using-lda-and-gibbs-sampling-explained-49d49b3d1045)) 
+  - namely: again, for each word in each document two probabilities are repeatedly calculated:
+    - a) “document”-level: proportion of words in document *d* belonging to a certain topic *t* (beta) -> relative importance of topics in documents
+    - b) “word”-level: proportion of words being assigned to a certain topic *t* in all other documents (gamma) -> relative importance of words in topics
+  - each word is reassigned to a new topic which is chosen as the probability of *p = beta x gamma* (-> overall probability that a certian topic generated the respective word *w*, put differently: overall probability that that *w* belongs to topic 1, 2, 3 or 4 (if *k* was set to 4)
 
 4) Assignment stops after user-specified threshold,	or when iterations begin to have little impact on	the probabilities	assigned to words in	the corpus</font size> 
 --
