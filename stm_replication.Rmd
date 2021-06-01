@@ -72,7 +72,7 @@ Data is made available on the [Harvard Dataverse](https://dataverse.harvard.edu/
 - ``dummy_female``: a dummy variable for speaker ethnicity (white vs non-white)
 
 ```{r message=FALSE, warning=FALSE}
-df <- read_tsv('C:/Users/camil/Desktop/CSS Session/ted_main_dataset.tsv')
+df <- read_tsv('C:/Users/homeoffice/Desktop/ted_main_dataset.tsv')
 
 df$date_num <- factor(df$date) %>% as.numeric() # turn date variable from character to numeric
 
@@ -162,7 +162,7 @@ save.image('C:/Users/camil/Desktop/CSS Session/ted_first_model.RData')
 ```
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
-load("C:/Users/camil/Desktop/CSS Session/ted_first_model.RData")
+load("C:/Users/homeoffice/Desktop/ted_first_model.RData")
 ```
 
 We can also plot the results of our topic model.
@@ -224,7 +224,7 @@ save.image('C:/Users/camil/Desktop/CSS Session/ted_all_topic_models.RData')
 ```
 
 ```{r message=FALSE, include=FALSE}
-load("C:/Users/camil/Desktop/CSS Session/ted_all_topic_models.RData")
+load("C:/Users/homeoffice/Desktop/ted_all_topic_models.RData")
 ```
 
 ```{r message=FALSE, warning=FALSE}
