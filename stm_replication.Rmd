@@ -32,7 +32,7 @@ For further ideas, especially with regards to visualization and pre-processing o
 ## Setup
 
 ```{r, include = FALSE}
-knitr::opts_knit$set(root.dir = 'C:/Users/camil/Desktop/ted-talks-STM') #set working directory
+knitr::opts_knit$set(root.dir = 'C:/Users/homeoffice/Desktop/ted-talks-STM') #set working directory
 
 set.seed(1337)
 ```
