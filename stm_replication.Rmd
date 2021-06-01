@@ -373,7 +373,7 @@ gamma_terms %>%
                                   family="IBMPlexSans-Bold"),
         plot.subtitle = element_text(size = 13)) +
   labs(x = NULL, y = expression(gamma),
-       title = "Top 20 topics by prevalence in the TED Talks corpus",
+       title = "Top 30 topics by prevalence in the TED Talks corpus",
        subtitle = "With the top words that contribute to each topic")
 ```
 
