@@ -52,7 +52,6 @@ if(!require("stminsights")) {install.packages("stminsights"); library("stminsigh
 if(!require("lubridate")) {install.packages("lubridate"); library("lubridate")}
 if(!require("ggplot2")) {install.packages("ggplot2"); library("ggplot2")}
 if(!require("cowplot")) {install.packages("cowplot"); library("cowplot")}
-
 if(!require("scales")) {install.packages("scales"); library("scales")}
 if(!require("ggthemes")) {install.packages("ggthemes"); library("ggthemes")}
 
